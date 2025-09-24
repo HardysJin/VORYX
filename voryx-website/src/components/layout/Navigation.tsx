@@ -192,7 +192,7 @@ export default function Navigation() {
                     >
                       <Link
                         href={item.href}
-                        className="group block relative py-4 px-6 transition-all duration-200"
+                        className="group block relative py-2 px-6 transition-all duration-200"
                         onClick={closeMenu}
                       >
                         {/* 悬停背景 */}
