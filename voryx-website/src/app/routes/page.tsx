@@ -42,22 +42,34 @@ const routes = [
   }
 ]
 
+// 统一的动画配置
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.6, ease: "easeOut" }
+}
+
+const routeCardVariants = {
+  initial: { opacity: 0, y: 30, scale: 0.95 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  viewport: { once: true, amount: 0.2 }, // 降低触发阈值
+  transition: { duration: 0.6, ease: "easeOut" }
+}
+
 export default function Routes() {
   return (
-    <div className="pt-20 min-h-screen">
+    <div className="page-content min-h-screen bg-black">
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
+      <section className="pt-8 pb-20">
+        <div className="container">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            {...fadeInUp}
             className="text-center mb-16"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-wide">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-wide text-white">
               Current Expeditions
             </h1>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            <p className="text-xl text-white text-opacity-80 max-w-3xl mx-auto">
               Active and upcoming VORYX expeditions to the world's most remote and 
               challenging environments. Each route is meticulously planned with 
               scientific objectives and cultural immersion.
@@ -69,37 +81,43 @@ export default function Routes() {
             {routes.map((route, index) => (
               <motion.div
                 key={route.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                className="bg-voryx-gray/30 border border-white/10 p-8 hover:border-voryx-accent/30 transition-all duration-300"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.1 }} // 进一步降低阈值
+                transition={{ 
+                  duration: 0.7, 
+                  delay: index * 0.15, // 减少延迟
+                  ease: "easeOut" 
+                }}
+                className="bg-voryx-gray bg-opacity-30 border border-white border-opacity-10 p-8 hover:border-voryx-accent hover:border-opacity-30 transition-all duration-300"
+                style={{ willChange: 'transform, opacity' }} // 性能优化
               >
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Main Content */}
                   <div className="lg:col-span-2">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-3xl font-bold tracking-wide">{route.title}</h2>
+                      <h2 className="text-3xl font-bold tracking-wide text-white">{route.title}</h2>
                       <span className={`px-3 py-1 text-sm font-medium rounded ${
-                        route.status === 'Active' ? 'bg-green-500/20 text-green-400' :
-                        route.status === 'Accepting Applications' ? 'bg-voryx-accent/20 text-voryx-accent' :
-                        'bg-orange-500/20 text-orange-400'
+                        route.status === 'Active' ? 'bg-green-500 bg-opacity-20 text-green-400' :
+                        route.status === 'Accepting Applications' ? 'bg-voryx-accent bg-opacity-20 text-voryx-accent' :
+                        'bg-orange-500 bg-opacity-20 text-orange-400'
                       }`}>
                         {route.status}
                       </span>
                     </div>
                     
-                    <div className="flex items-center text-gray-400 mb-4">
+                    <div className="flex items-center text-white text-opacity-80 mb-4">
                       <MapPin className="w-4 h-4 mr-2" />
                       <span>{route.location}</span>
                     </div>
                     
-                    <p className="text-lg text-gray-300 mb-6 leading-relaxed">
+                    <p className="text-lg text-white text-opacity-90 mb-6 leading-relaxed">
                       {route.description}
                     </p>
                     
                     <div className="space-y-2">
                       <h4 className="font-semibold text-voryx-accent">Expedition Highlights:</h4>
-                      <ul className="list-disc list-inside text-gray-400 space-y-1">
+                      <ul className="list-disc list-inside text-white text-opacity-80 space-y-1">
                         {route.highlights.map((highlight, idx) => (
                           <li key={idx}>{highlight}</li>
                         ))}
@@ -108,40 +126,46 @@ export default function Routes() {
                   </div>
 
                   {/* Stats */}
-                  <div className="space-y-6">
+                  <motion.div 
+                    className="space-y-6"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                  >
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="text-center p-4 bg-black/40 border border-white/10">
+                      <div className="text-center p-4 bg-black bg-opacity-40 border border-white border-opacity-10">
                         <Calendar className="w-6 h-6 text-voryx-accent mx-auto mb-2" />
-                        <div className="text-sm text-gray-400">Duration</div>
-                        <div className="font-semibold">{route.duration}</div>
+                        <div className="text-sm text-white text-opacity-80">Duration</div>
+                        <div className="font-semibold text-white">{route.duration}</div>
                       </div>
-                      <div className="text-center p-4 bg-black/40 border border-white/10">
+                      <div className="text-center p-4 bg-black bg-opacity-40 border border-white border-opacity-10">
                         <Users className="w-6 h-6 text-voryx-accent mx-auto mb-2" />
-                        <div className="text-sm text-gray-400">Difficulty</div>
-                        <div className="font-semibold">{route.difficulty}</div>
+                        <div className="text-sm text-white text-opacity-80">Difficulty</div>
+                        <div className="font-semibold text-white">{route.difficulty}</div>
                       </div>
                     </div>
                     
-                    <div className="p-4 bg-black/40 border border-white/10">
+                    <div className="p-4 bg-black bg-opacity-40 border border-white border-opacity-10">
                       <div className="flex items-center mb-2">
                         <Thermometer className="w-4 h-4 text-voryx-accent mr-2" />
-                        <span className="text-sm text-gray-400">Temperature Range</span>
+                        <span className="text-sm text-white text-opacity-80">Temperature Range</span>
                       </div>
-                      <div className="font-semibold">{route.temperature}</div>
+                      <div className="font-semibold text-white">{route.temperature}</div>
                     </div>
                     
-                    <div className="p-4 bg-black/40 border border-white/10">
+                    <div className="p-4 bg-black bg-opacity-40 border border-white border-opacity-10">
                       <div className="flex items-center mb-2">
                         <MapPin className="w-4 h-4 text-voryx-accent mr-2" />
-                        <span className="text-sm text-gray-400">Coordinates</span>
+                        <span className="text-sm text-white text-opacity-80">Coordinates</span>
                       </div>
-                      <div className="font-mono text-sm">{route.coordinates}</div>
+                      <div className="font-mono text-sm text-white">{route.coordinates}</div>
                     </div>
                     
                     <button className="w-full bg-voryx-accent text-black font-bold py-3 hover:bg-white transition-colors duration-300">
                       LEARN MORE
                     </button>
-                  </div>
+                  </motion.div>
                 </div>
               </motion.div>
             ))}
