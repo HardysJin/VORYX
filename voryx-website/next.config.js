@@ -7,12 +7,6 @@ const nextConfig = {
         hostname: '**',
       },
     ],
-    formats: ['image/webp', 'image/avif'],
-  },
-  transpilePackages: [],
-  swcMinify: true,
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
   },
 }
 

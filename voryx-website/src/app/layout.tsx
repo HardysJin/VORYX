@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-voryx-dark text-white min-h-screen`}>
         <Navigation />
-        <main className="relative">
+        <main className="relative pt-20">
           {children}
         </main>
         <Footer />
