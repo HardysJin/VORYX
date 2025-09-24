@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, easeOut } from 'framer-motion'
 import { MapPin, Calendar, Users, Thermometer } from 'lucide-react'
 
 const routes = [
@@ -46,14 +46,7 @@ const routes = [
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, ease: "easeOut" }
-}
-
-const routeCardVariants = {
-  initial: { opacity: 0, y: 30, scale: 0.95 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  viewport: { once: true, amount: 0.2 }, // 降低触发阈值
-  transition: { duration: 0.6, ease: "easeOut" }
+  transition: { duration: 0.6, ease: easeOut }
 }
 
 export default function Routes() {
@@ -62,15 +55,12 @@ export default function Routes() {
       {/* Hero Section */}
       <section className="pt-8 pb-20">
         <div className="container">
-          <motion.div
-            {...fadeInUp}
-            className="text-center mb-16"
-          >
+          <motion.div {...fadeInUp} className="text-center mb-16">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-wide text-white">
               Current Expeditions
             </h1>
             <p className="text-xl text-white text-opacity-80 max-w-3xl mx-auto">
-              Active and upcoming VORYX expeditions to the world's most remote and 
+              Active and upcoming VORYX expeditions to the world&apos;s most remote and 
               challenging environments. Each route is meticulously planned with 
               scientific objectives and cultural immersion.
             </p>
@@ -87,7 +77,7 @@ export default function Routes() {
                 transition={{ 
                   duration: 0.7, 
                   delay: index * 0.15, // 减少延迟
-                  ease: "easeOut" 
+                  ease: [0.42, 0, 0.58, 1] // cubic-bezier for easeOut
                 }}
                 className="bg-voryx-gray bg-opacity-30 border border-white border-opacity-10 p-8 hover:border-voryx-accent hover:border-opacity-30 transition-all duration-300"
                 style={{ willChange: 'transform, opacity' }} // 性能优化
@@ -131,7 +121,7 @@ export default function Routes() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
+                    transition={{ duration: 0.6, delay: 0.2, ease: [0.42, 0, 0.58, 1] }}
                   >
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center p-4 bg-black bg-opacity-40 border border-white border-opacity-10">

@@ -65,7 +65,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1.3 }}
             >
-              Elite expeditions to the world's most remote destinations. We create transformative 
+              Elite expeditions to the world&apos;s most remote destinations. We create transformative 
               journeys that push the boundaries of exploration.
             </motion.p>
             
@@ -196,12 +196,12 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <h2 className="cta-title font-bold mb-8 tracking-wide">
-              Become a Co-Author of Our Generation's Archive
+              Become a Co-Author of Our Generation&apos;s Archive
             </h2>
             <div className="w-32 h-1 bg-voryx-accent mx-auto mb-8"></div>
             <p className="cta-description text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
               Join VORYX and contribute to a living document of exploration, 
-              discovery, and human resilience in the world's most challenging environments.
+              discovery, and human resilience in the world&apos;s most challenging environments.
             </p>
             <motion.div
               whileHover={{ scale: 1.05 }}

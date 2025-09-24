@@ -59,13 +59,13 @@ export default function About() {
             <motion.div {...slideInLeft}>
               <h2 className="text-4xl font-bold mb-8 tracking-wide text-white">Our Philosophy</h2>
               <p className="text-lg text-white text-opacity-80 leading-relaxed mb-6">
-                True exploration goes beyond reaching a destination. It's about understanding 
+                True exploration goes beyond reaching a destination. It&apos;s about understanding 
                 the delicate ecosystems, ancient cultures, and extreme conditions that shape 
                 these remote landscapes.
               </p>
               <p className="text-lg text-white text-opacity-80 leading-relaxed mb-6">
                 Every VORYX expedition is designed as a collaborative effort between adventurers, 
-                scientists, and local communities. We don't just visit these places—we contribute 
+                scientists, and local communities. We don&apos;t just visit these places—we contribute 
                 to their understanding and preservation.
               </p>
               <p className="text-lg text-white text-opacity-80 leading-relaxed">
@@ -74,10 +74,12 @@ export default function About() {
               </p>
             </motion.div>
             <motion.div {...slideInRight}>
-              <div className="bg-voryx-accent bg-opacity-20 border border-white border-opacity-10 p-8 text-center">
-                <div className="text-6xl mb-4">🌍</div>
-                <h3 className="text-2xl font-bold tracking-wide text-white">Beyond Reach</h3>
-                <p className="text-white text-opacity-80 mt-2">Our guiding principle</p>
+              <div className="">
+                <img 
+                  src="/images/video-poster.jpg" 
+                  alt="Video Poster" 
+                  className="w-full h-auto object-cover"
+                />
               </div>
             </motion.div>
           </div>
@@ -126,7 +128,7 @@ export default function About() {
             ].map((value, index) => (
               <motion.div
                 key={index}
-                style={{ willChange: 'opacity, transform' }}
+                style={{ willChange: "opacity, transform" }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.3 }}
@@ -162,8 +164,8 @@ export default function About() {
             </p>
             <div className="bg-voryx-accent bg-opacity-20 border border-white border-opacity-10 p-12 max-w-4xl mx-auto">
               <p className="text-2xl font-light text-center italic text-white">
-                "We are not tourists. We are temporary residents of the world's most extraordinary places, 
-                here to learn, document, and contribute to humanity's understanding of our planet."
+                &quot;We are not tourists. We are temporary residents of the world&apos;s most extraordinary places, 
+                here to learn, document, and contribute to humanity&apos;s understanding of our planet.&quot;
               </p>
               <p className="text-voryx-accent mt-6 tracking-wide">— VORYX EXPEDITION CHARTER</p>
             </div>

@@ -13,20 +13,17 @@ export function generateMetadata({
   description,
   keywords = [],
   image,
-  canonical
 }: PageMetadata): Metadata {
   const siteName = 'VORYX - Beyond Reach'
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://voryx.com'
   
   const fullTitle = title.includes(siteName) ? title : `${title} | ${siteName}`
   const imageUrl = image ? `${siteUrl}${image}` : `${siteUrl}/images/og-image.jpg`
-  const canonicalUrl = canonical ? `${siteUrl}${canonical}` : undefined
 
   return {
     title: fullTitle,
     description,
     keywords: keywords.join(', '),
-    canonical: canonicalUrl,
     openGraph: {
       title: fullTitle,
       description,

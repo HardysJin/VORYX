@@ -20,8 +20,8 @@ export default function NotFound() {
             Beyond Our Mapped Territory
           </h2>
           <p className="text-xl text-gray-400 mb-8 max-w-lg mx-auto leading-relaxed">
-            You've ventured into uncharted digital territory. Even our most experienced 
-            expedition leaders couldn't locate this page.
+            You&apos;ve ventured into uncharted digital territory. Even our most experienced 
+            expedition leaders couldn&apos;t locate this page.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

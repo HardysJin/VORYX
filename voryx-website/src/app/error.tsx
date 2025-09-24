@@ -28,7 +28,7 @@ export default function Error({
             Expedition Interrupted
           </h1>
           <p className="text-xl text-gray-400 mb-8 max-w-lg mx-auto leading-relaxed">
-            We've encountered unexpected conditions on this digital expedition. 
+            We&apos;ve encountered unexpected conditions on this digital expedition. 
             Our technical team is working to resolve the situation.
           </p>
           <button
