@@ -23,7 +23,9 @@ export default function Navigation() {
   // 监听滚动改变导航栏透明度
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
+      requestAnimationFrame(() => {
+        setIsScrolled(window.scrollY > 50)
+      })
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
@@ -171,7 +173,7 @@ export default function Navigation() {
                 opacity: 0, 
                 y: -20,
                 backdropFilter: 'blur(0px)',
-                transition: { duration: 0.05, ease: easeOut }
+                transition: { duration: 0.15, ease: easeOut }
               }}
               transition={{ duration: 0.05, ease: easeOut }}
               className="lg:hidden bg-black bg-opacity-90 border-t border-white border-opacity-10"
