@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
-import Image from 'next/image'
 
 const useMediaQuery = (query: string) => {
   const [matches, setMatches] = useState(false);
@@ -93,17 +92,20 @@ type ImageContentProps = {
   isCard?: boolean;
 };
 
-
 const ImageContent = ({ destination, isCard = false }: ImageContentProps) => (
   <div className="absolute inset-0">
     <div className={`absolute inset-0 bg-gradient-to-br ${destination.bgColor}`} />
     <div className="absolute inset-0">
-      <Image 
+      <img 
         src={isCard ? destination.cardImage : destination.image}
         alt={destination.title}
-        fill
-        className="object-cover opacity-70"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        className="w-full h-full object-cover opacity-70"
+        style={{ 
+          objectFit: 'cover',
+          objectPosition: 'center',
+          minWidth: '100%',
+          minHeight: '100%'
+        }}
         onError={(e) => {
           console.error('Image failed to load:', (e.target as HTMLImageElement).src);
           (e.target as HTMLImageElement).style.display = 'none';
@@ -126,6 +128,7 @@ export default function Atlas() {
   // 响应式断点
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
+  const isDesktop = useMediaQuery('(min-width: 1025px)');
 
   const currentDestination = destinations[currentIndex];
   const backgroundDestination = destinations[backgroundIndex];
