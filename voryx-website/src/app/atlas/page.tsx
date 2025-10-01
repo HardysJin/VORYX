@@ -429,7 +429,7 @@ export default function Atlas() {
       <div className="absolute inset-0 flex items-center z-10 pt-24">
         <div className="w-full h-full relative">
           {/* Left Content */}
-          <div className="atlas-left-content">
+          <div className="atlas-left-content mb-96">
             <AnimatePresence mode="wait">
               <motion.div 
                 key={`content-${currentDestination.id}`}
