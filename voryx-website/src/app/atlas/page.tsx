@@ -3,6 +3,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import Image from 'next/image'
+
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [matches, query]);
+
+  return matches;
+};
 
 const destinations = [
   {
@@ -76,20 +93,17 @@ type ImageContentProps = {
   isCard?: boolean;
 };
 
+
 const ImageContent = ({ destination, isCard = false }: ImageContentProps) => (
   <div className="absolute inset-0">
     <div className={`absolute inset-0 bg-gradient-to-br ${destination.bgColor}`} />
     <div className="absolute inset-0">
-      <img 
+      <Image 
         src={isCard ? destination.cardImage : destination.image}
         alt={destination.title}
-        className="w-full h-full object-cover opacity-70"
-        style={{ 
-          objectFit: 'cover',
-          objectPosition: 'center',
-          minWidth: '100%',
-          minHeight: '100%'
-        }}
+        fill
+        className="object-cover opacity-70"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         onError={(e) => {
           console.error('Image failed to load:', (e.target as HTMLImageElement).src);
           (e.target as HTMLImageElement).style.display = 'none';
@@ -109,6 +123,10 @@ export default function Atlas() {
   const bgTimerRef = useRef<NodeJS.Timeout | null>(null);
   const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 响应式断点
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
+
   const currentDestination = destinations[currentIndex];
   const backgroundDestination = destinations[backgroundIndex];
   
@@ -120,8 +138,10 @@ export default function Atlas() {
   }, []);
   
   const getVisibleCards = () => {
+    // 根据屏幕大小决定显示的卡片数量
+    const cardCount = isMobile ? 2 : isTablet ? 3 : 3;
     const cards = [];
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= cardCount; i++) {
       const index = (currentIndex + i) % destinations.length;
       cards.push({
         ...destinations[index],
@@ -175,14 +195,23 @@ export default function Atlas() {
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
       <style jsx>{`
+        /* Centered Container for alignment with header */
+        .atlas-centered-container {
+          position: relative;
+          max-width: 1920px;
+          margin: 0 auto;
+          width: 100%;
+          padding: 0 clamp(1rem, 5vw, 4rem);
+        }
+
         /* Navigation Buttons - Responsive */
         .atlas-nav-btn {
-          width: clamp(40px, 6vw, 48px);
-          height: clamp(40px, 6vw, 48px);
+          width: clamp(36px, 5vw, 48px);
+          height: clamp(36px, 5vw, 48px);
           border-radius: 50%;
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.15);
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
           color: white;
           display: flex;
           align-items: center;
@@ -193,7 +222,7 @@ export default function Atlas() {
         }
         
         .atlas-nav-btn:not(:disabled):hover {
-          background: rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.25);
           transform: scale(1.1);
         }
         
@@ -213,128 +242,184 @@ export default function Atlas() {
 
         /* Responsive Typography */
         .atlas-title {
-          font-size: clamp(2rem, 8vw, 5rem);
-          line-height: 0.95;
+          font-size: clamp(1.75rem, 7vw, 5rem);
+          line-height: 1;
           letter-spacing: 0.02em;
         }
 
         .atlas-subtitle {
-          font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+          font-size: clamp(0.7rem, 1.2vw, 0.875rem);
           letter-spacing: 0.1em;
         }
 
         .atlas-description {
-          font-size: clamp(0.875rem, 1.8vw, 1.125rem);
+          font-size: clamp(0.85rem, 1.5vw, 1.125rem);
           line-height: 1.6;
         }
 
         .atlas-button {
-          padding: clamp(0.625rem, 1.5vw, 0.875rem) clamp(1.25rem, 3vw, 1.75rem);
-          font-size: clamp(0.875rem, 1.5vw, 1rem);
+          padding: clamp(0.5rem, 1.2vw, 0.875rem) clamp(1rem, 2.5vw, 1.75rem);
+          font-size: clamp(0.8rem, 1.3vw, 1rem);
         }
 
         .atlas-card-title {
-          font-size: clamp(0.75rem, 1.2vw, 1rem);
+          font-size: clamp(0.7rem, 1.1vw, 1rem);
         }
 
         .atlas-card-subtitle {
-          font-size: clamp(0.625rem, 1vw, 0.75rem);
+          font-size: clamp(0.6rem, 0.9vw, 0.75rem);
         }
 
-        /* Responsive Layout */
-        .atlas-content-wrapper {
-          display: flex;
-          flex-direction: column;
-          padding-top: clamp(3rem, 12vh, 6rem);
-        }
-
-        .atlas-left-content {
-          padding: clamp(1.5rem, 4vw, 3rem);
-        }
-
-        .atlas-right-cards {
-          padding: clamp(1rem, 3vw, 3rem);
-          padding-top: clamp(8rem, 15vh, 16rem);
-        }
-
-        .atlas-divider {
-          width: clamp(3rem, 8vw, 4rem);
-          height: 2px;
-        }
-
-        /* Card Sizing - Responsive */
+        /* Card Sizing - 使用固定尺寸确保显示 */
         .atlas-card {
-          width: clamp(140px, 18vw, 192px);
-          height: clamp(180px, 24vw, 256px);
-          border-radius: clamp(12px, 2vw, 16px);
+          width: 192px !important;
+          height: 256px !important;
+          border-radius: 16px !important;
+          background-color: #1a1a1a;
+          flex-shrink: 0 !important;
+        }
+        
+        /* 移动端固定尺寸 */
+        @media (max-width: 768px) {
+          .atlas-card {
+            width: 140px !important;
+            height: 190px !important;
+          }
+        }
+        
+        /* 平板固定尺寸 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .atlas-card {
+            width: 160px !important;
+            height: 220px !important;
+          }
         }
 
         .atlas-card-gap {
-          gap: clamp(0.75rem, 2vw, 1rem);
+          gap: clamp(0.5rem, 1.5vw, 1rem);
         }
 
-        /* Mobile Landscape Optimization */
-        @media (max-width: 896px) and (orientation: landscape) {
+        /* Mobile Portrait - 完全重新布局 */
+        @media (max-width: 768px) {
+          .atlas-centered-container {
+            padding: 0;
+            max-width: 100%;
+          }
+
           .atlas-content-wrapper {
-            padding-top: 2rem;
-          }
-
-          .atlas-right-cards {
-            padding-top: 4rem;
-          }
-
-          .atlas-title {
-            font-size: clamp(1.5rem, 6vw, 3rem);
-          }
-        }
-
-        /* Mobile Portrait */
-        @media (max-width: 640px) and (orientation: portrait) {
-          .atlas-content-wrapper {
-            flex-direction: column;
+            flex-direction: column !important;
+            height: 100%;
           }
 
           .atlas-left-content {
-            width: 100%;
-            padding: 2rem 1.5rem;
+            position: relative !important;
+            width: 100% !important;
+            padding: 1.5rem 1.25rem !important;
+            max-height: 50vh;
+            overflow-y: auto;
+            z-index: 20;
           }
 
           .atlas-right-cards {
-            width: 100%;
-            padding: 1rem 1rem 2rem;
-            padding-top: 2rem;
+            position: relative !important;
+            width: 100% !important;
+            height: auto !important;
+            padding: 0.75rem !important;
+            padding-bottom: 2rem !important;
+            display: flex;
+            justify-content: center;
+            z-index: 20;
           }
 
-          .atlas-title {
-            font-size: clamp(2rem, 10vw, 3rem);
+          .atlas-cards-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 20;
           }
 
           .atlas-card {
-            width: clamp(120px, 28vw, 160px);
-            height: clamp(160px, 36vw, 220px);
+            width: clamp(100px, 28vw, 140px) !important;
+            height: clamp(140px, 38vw, 190px) !important;
+            position: relative;
+            z-index: 20;
+          }
+
+          .atlas-title {
+            font-size: clamp(1.5rem, 8vw, 2.5rem) !important;
+          }
+
+          .atlas-description {
+            font-size: 0.9rem !important;
+            margin-bottom: 1rem !important;
+          }
+
+          .atlas-nav-btn {
+            width: 36px !important;
+            height: 36px !important;
+            z-index: 25;
           }
         }
 
         /* Tablet Portrait */
-        @media (min-width: 641px) and (max-width: 1024px) and (orientation: portrait) {
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .atlas-centered-container {
+            padding: 0 2rem;
+          }
+
           .atlas-content-wrapper {
-            flex-direction: column;
+            flex-direction: row !important;
           }
 
           .atlas-left-content {
-            width: 100%;
-            padding: 3rem 2rem;
+            position: absolute !important;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 45% !important;
+            padding: 2rem 0 !important;
+            display: flex;
+            align-items: center;
+            z-index: 20;
           }
 
           .atlas-right-cards {
-            width: 100%;
-            padding: 2rem;
-            padding-top: 4rem;
+            position: absolute !important;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 55% !important;
+            padding: 1.5rem 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 0 !important;
+            z-index: 20;
+          }
+
+          .atlas-cards-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            z-index: 20;
+          }
+
+          .atlas-card {
+            width: clamp(130px, 18vw, 160px) !important;
+            height: clamp(180px, 24vw, 220px) !important;
           }
         }
 
         /* Desktop */
         @media (min-width: 1025px) {
+          .atlas-centered-container {
+            padding: 0 clamp(2rem, 5vw, 4rem);
+          }
+
           .atlas-content-wrapper {
             flex-direction: row;
           }
@@ -342,27 +427,45 @@ export default function Atlas() {
           .atlas-left-content {
             position: absolute;
             left: 0;
-            top: 0;
-            bottom: 0;
+            top: 20%;
+            bottom: auto;
             width: 50%;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
+            padding: 0;
+            z-index: 20;
           }
 
           .atlas-right-cards {
             position: absolute;
             right: 0;
-            top: 0;
-            bottom: 0;
+            top: auto;
+            bottom: 20%;
             width: 50%;
+            min-width: 600px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+            z-index: 20;
+          }
+
+          .atlas-cards-container {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            gap: 1rem;
+            position: relative;
+            z-index: 20;
+            min-width: 550px;
           }
         }
 
         /* Large Desktop */
         @media (min-width: 1920px) {
+          .atlas-centered-container {
+            padding: 0 4rem;
+          }
+
           .atlas-title {
             font-size: 5.5rem;
           }
@@ -385,6 +488,25 @@ export default function Atlas() {
         /* Text Shadow for Better Readability */
         .text-shadow-lg {
           text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Smooth Scrolling */
+        .atlas-left-content {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        .atlas-left-content::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .atlas-left-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .atlas-left-content::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 2px;
         }
       `}</style>
 
@@ -426,96 +548,255 @@ export default function Atlas() {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="absolute inset-0 flex items-center z-10 pt-24">
-        <div className="w-full h-full relative">
-          {/* Left Content */}
-          <div className="atlas-left-content mb-96">
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={`content-${currentDestination.id}`}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.5 }}
-                className="max-w-xl w-full"
+      <div 
+        className="atlas-content-wrapper" 
+        style={
+          isMobile ? {
+            position: 'absolute',
+            inset: 0,
+            zIndex: 40,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            height: '100vh',
+            paddingTop: '64px'
+          } : {
+            position: 'absolute',
+            inset: 0,
+            zIndex: 40
+          }
+        }
+      >
+        {/* Container for alignment with header */}
+        <div 
+          className="atlas-centered-container"
+          style={
+            isMobile ? { 
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            } : {
+              position: 'absolute',
+              inset: 0,
+              maxWidth: '1920px',
+              margin: '0 auto',
+              width: '100%',
+              padding: '0 clamp(1rem, 5vw, 4rem)'
+            }
+          }
+        >
+          <div className="w-full h-full relative" style={isMobile ? { height: 'auto', flex: '1 1 auto', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' } : {}}>
+            {/* Left Content */}
+            <div 
+              className="atlas-left-content"
+              style={
+                isMobile ? {
+                  position: 'relative',
+                  width: '100%',
+                  padding: '1rem 0.5rem',
+                  paddingBottom: '0.5rem',
+                  zIndex: 40
+                } : {
+                  position: 'absolute',
+                  left: 0,
+                  top: '20%',
+                  width: isTablet ? '45%' : '50%',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  padding: '0',
+                  zIndex: 40
+                }
+              }
+            >
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={`content-${currentDestination.id}`}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.5 }}
+                  className="max-w-2xl w-full"
+                >
+                  <div className="w-16 h-0.5 bg-white mb-3" />
+                  <p className="atlas-subtitle text-white mb-3 tracking-wide uppercase">
+                    {currentDestination.subtitle}
+                  </p>
+                  <h1 className="atlas-title text-white font-bold mb-4 tracking-tight text-shadow-lg">
+                    {currentDestination.title}
+                  </h1>
+                  <p className="atlas-description text-white/90 mb-6 leading-relaxed">
+                    {currentDestination.description}
+                  </p>
+                  <button className="atlas-button inline-flex items-center gap-2 rounded-lg bg-voryx-accent text-black font-bold hover:bg-white transition-all duration-300">
+                    Learn More
+                    <ArrowRight size={16} />
+                  </button>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right Cards with Navigation */}
+            <div 
+              className="atlas-right-cards"
+              style={
+                isMobile ? {
+                  position: 'relative',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.5rem 1rem',
+                  paddingBottom: '2rem',
+                  zIndex: 40
+                } : {
+                  position: 'absolute',
+                  right: 0,
+                  bottom: '20%',
+                  width: isTablet ? '55%' : '50%',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  padding: '0',
+                  zIndex: 40
+                }
+              }
+            >
+              <div 
+                className="atlas-cards-container"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  position: 'relative',
+                  zIndex: 40
+                }}
               >
-                <div className="atlas-divider bg-white mb-4" />
-                <p className="atlas-subtitle text-white mb-4 tracking-wide uppercase">
-                  {currentDestination.subtitle}
-                </p>
-                <h1 className="atlas-title text-white font-bold mb-6 tracking-tight text-shadow-lg">
-                  {currentDestination.title}
-                </h1>
-                <p className="atlas-description text-white/90 mb-8 leading-relaxed">
-                  {currentDestination.description}
-                </p>
-                <button className="atlas-button inline-flex items-center gap-2 rounded-lg bg-voryx-accent text-black font-bold hover:bg-white transition-all duration-300">
-                  Learn More
-                  <ArrowRight size={18} />
+                {/* Left Navigation Button */}
+                <button 
+                  onClick={handlePrev}
+                  disabled={isTransitioning}
+                  className="atlas-nav-btn"
+                  style={{ 
+                    position: 'relative', 
+                    zIndex: 45,
+                    width: isMobile ? '36px' : '48px',
+                    height: isMobile ? '36px' : '48px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                    opacity: isTransitioning ? 0.4 : 1
+                  }}
+                >
+                  <ChevronLeft style={{ width: isMobile ? '16px' : '20px', height: isMobile ? '16px' : '20px' }} strokeWidth={2.5} />
                 </button>
-              </motion.div>
-            </AnimatePresence>
-          </div>
 
-          {/* Right Cards with Navigation */}
-          <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-start pl-8 pt-64 px-12">
-            <div className="relative flex items-center gap-4">
-              {/* Left Navigation Button */}
-              <button 
-                onClick={handlePrev}
-                disabled={isTransitioning}
-                className="atlas-nav-btn"
-              >
-                <ChevronLeft className="w-6 h-6" strokeWidth={2} />
-              </button>
+                {/* Cards Container */}
+                <div 
+                  style={{ 
+                    display: 'flex',
+                    gap: '1rem',
+                    position: 'relative',
+                    zIndex: 40
+                  }}
+                >
+                  <AnimatePresence mode="popLayout">
+                    {visibleCards.map((dest, idx) => {
+                      const isExpanding = expandingId === dest.id;
+                      
+                      return (
+                        <motion.div
+                          key={dest.id}
+                          layoutId={`shared-${dest.id}`}
+                          initial={{ opacity: 0, scale: 0.8, x: 100 }}
+                          animate={{ 
+                            opacity: isExpanding ? 0 : 1, 
+                            scale: 1, 
+                            x: 0 
+                          }}
+                          exit={{ opacity: 0, scale: 0.8, x: -50 }}
+                          transition={{ 
+                            duration: 0.5, 
+                            delay: idx * 0.1,
+                            opacity: { duration: 0.2 }
+                          }}
+                          onClick={() => !isTransitioning && handleCardClick(dest.originalIndex, dest.id)}
+                          style={{ 
+                            position: 'relative',
+                            width: isMobile ? '140px' : '192px',
+                            height: isMobile ? '190px' : '256px',
+                            borderRadius: '16px',
+                            overflow: 'hidden',
+                            cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                            backgroundColor: '#1a1a1a',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                            flexShrink: 0,
+                            zIndex: 40
+                          }}
+                          whileHover={!isExpanding && !isTransitioning ? { scale: 1.05, y: -10 } : {}}
+                        >
+                          <ImageContent destination={dest} isCard={true} />
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              padding: '12px',
+                              color: 'white',
+                              zIndex: 45
+                            }}
+                          >
+                            <p style={{ 
+                              fontSize: '0.75rem',
+                              marginBottom: '4px',
+                              opacity: 0.8
+                            }}>
+                              {dest.subtitle}
+                            </p>
+                            <h3 style={{ 
+                              fontSize: '1rem',
+                              fontWeight: 'bold',
+                              lineHeight: 1.25
+                            }}>
+                              {dest.title}
+                            </h3>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
 
-              {/* Cards Container */}
-              <div className="flex gap-4">
-                <AnimatePresence mode="popLayout">
-                  {visibleCards.slice(0, 3).map((dest, idx) => {
-                    const isExpanding = expandingId === dest.id;
-                    
-                    return (
-                      <motion.div
-                        key={dest.id}
-                        layoutId={`shared-${dest.id}`}
-                        initial={{ opacity: 0, scale: 0.8, x: 100 }}
-                        animate={{ 
-                          opacity: isExpanding ? 0 : 1, 
-                          scale: 1, 
-                          x: 0 
-                        }}
-                        exit={{ opacity: 0, scale: 0.8, x: -50 }}
-                        transition={{ 
-                          duration: 0.5, 
-                          delay: idx * 0.1,
-                          opacity: { duration: 0.2 }
-                        }}
-                        onClick={() => !isTransitioning && handleCardClick(dest.originalIndex, dest.id)}
-                        className={`relative w-48 h-64 rounded-2xl overflow-hidden cursor-pointer group shadow-2xl flex-shrink-0 ${
-                          isTransitioning ? 'card-disabled' : ''
-                        }`}
-                        whileHover={!isExpanding && !isTransitioning ? { scale: 1.05, y: -10 } : {}}
-                      >
-                        <ImageContent destination={dest} isCard={true} />
-                        <div className="absolute bottom-0 left-0 right-0 p-4 text-white z-10">
-                          <p className="text-xs mb-1 opacity-80">{dest.subtitle}</p>
-                          <h3 className="text-base font-bold leading-tight">{dest.title}</h3>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
+                {/* Right Navigation Button */}
+                <button 
+                  onClick={handleNext}
+                  disabled={isTransitioning}
+                  className="atlas-nav-btn"
+                  style={{ 
+                    position: 'relative', 
+                    zIndex: 45,
+                    width: isMobile ? '36px' : '48px',
+                    height: isMobile ? '36px' : '48px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                    opacity: isTransitioning ? 0.4 : 1
+                  }}
+                >
+                  <ChevronRight style={{ width: isMobile ? '16px' : '20px', height: isMobile ? '16px' : '20px' }} strokeWidth={2.5} />
+                </button>
               </div>
-
-              {/* Right Navigation Button */}
-              <button 
-                onClick={handleNext}
-                disabled={isTransitioning}
-                className="atlas-nav-btn"
-              >
-                <ChevronRight className="w-6 h-6" strokeWidth={2} />
-              </button>
             </div>
           </div>
         </div>

@@ -31,10 +31,10 @@ const staggerContainer = {
 
 export default function About() {
   return (
-    <div className="page-content min-h-screen bg-black">
+    <div className="pt-20 min-h-screen bg-black">
       {/* Hero Section */}
-      <section className="pt-8 pb-20">
-        <div className="container text-center py-6">
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto text-center">
           <motion.div {...fadeInUp}>
             <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-wide text-white">
               Who We Are
@@ -52,43 +52,45 @@ export default function About() {
         </div>
       </section>
 
-      {/* Philosophy Section - 关键优化区域 */}
+      {/* Philosophy Section */}
       <section className="py-16 bg-gray-900">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
-            <motion.div {...slideInLeft}>
-              <h2 className="text-4xl font-bold mb-8 tracking-wide text-white">Our Philosophy</h2>
-              <p className="text-lg text-white text-opacity-80 leading-relaxed mb-6">
-                True exploration goes beyond reaching a destination. It&apos;s about understanding 
-                the delicate ecosystems, ancient cultures, and extreme conditions that shape 
-                these remote landscapes.
-              </p>
-              <p className="text-lg text-white text-opacity-80 leading-relaxed mb-6">
-                Every VORYX expedition is designed as a collaborative effort between adventurers, 
-                scientists, and local communities. We don&apos;t just visit these places—we contribute 
-                to their understanding and preservation.
-              </p>
-              <p className="text-lg text-white text-opacity-80 leading-relaxed">
-                This is exploration with purpose. This is travel that transforms not just 
-                the traveler, but our collective understanding of the world.
-              </p>
-            </motion.div>
-            <motion.div {...slideInRight}>
-              <div className="">
-                <img 
-                  src="/images/video-poster.jpg" 
-                  alt="Video Poster" 
-                  className="w-full h-auto object-cover"
-                />
-              </div>
-            </motion.div>
+        <div className="px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <motion.div {...slideInLeft}>
+                <h2 className="text-4xl font-bold mb-8 tracking-wide text-white">Our Philosophy</h2>
+                <p className="text-lg text-white text-opacity-80 leading-relaxed mb-6">
+                  True exploration goes beyond reaching a destination. It&apos;s about understanding 
+                  the delicate ecosystems, ancient cultures, and extreme conditions that shape 
+                  these remote landscapes.
+                </p>
+                <p className="text-lg text-white text-opacity-80 leading-relaxed mb-6">
+                  Every VORYX expedition is designed as a collaborative effort between adventurers, 
+                  scientists, and local communities. We don&apos;t just visit these places—we contribute 
+                  to their understanding and preservation.
+                </p>
+                <p className="text-lg text-white text-opacity-80 leading-relaxed">
+                  This is exploration with purpose. This is travel that transforms not just 
+                  the traveler, but our collective understanding of the world.
+                </p>
+              </motion.div>
+              <motion.div {...slideInRight}>
+                <div className="">
+                  <img 
+                    src="/images/video-poster.jpg" 
+                    alt="Video Poster" 
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Values Section */}
-      <section className="py-20">
-        <div className="container">
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -106,7 +108,7 @@ export default function About() {
             initial="initial"
             whileInView="animate"
             viewport={{ once: true, amount: 0.2 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
           >
             {[
               {
@@ -149,8 +151,8 @@ export default function About() {
       </section>
 
       {/* Team Section */}
-      <section className="py-20 bg-black">
-        <div className="container text-center">
+      <section className="py-20 bg-black px-4">
+        <div className="max-w-6xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -162,7 +164,7 @@ export default function About() {
               Expedition leaders, scientists, logistics experts, and cultural liaisons 
               who make impossible journeys possible.
             </p>
-            <div className="bg-voryx-accent bg-opacity-20 border border-white border-opacity-10 p-12 max-w-4xl mx-auto">
+              <div className="bg-black bg-opacity-60 border border-voryx-accent border-opacity-30 p-12 max-w-4xl mx-auto">
               <p className="text-2xl font-light text-center italic text-white">
                 &quot;We are not tourists. We are temporary residents of the world&apos;s most extraordinary places, 
                 here to learn, document, and contribute to humanity&apos;s understanding of our planet.&quot;

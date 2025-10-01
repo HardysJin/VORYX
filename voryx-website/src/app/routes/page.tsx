@@ -51,10 +51,10 @@ const fadeInUp = {
 
 export default function Routes() {
   return (
-    <div className="page-content min-h-screen bg-black">
+    <div className="pt-20 min-h-screen bg-black">
       {/* Hero Section */}
-      <section className="pt-8 pb-20">
-        <div className="container">
+      <section className="py-20 px-4">
+        <div className="max-w-5xl mx-auto">
           <motion.div {...fadeInUp} className="text-center mb-16">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-wide text-white">
               Current Expeditions
@@ -73,24 +73,25 @@ export default function Routes() {
                 key={route.id}
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.1 }} // 进一步降低阈值
+                viewport={{ once: true, amount: 0.1 }}
                 transition={{ 
                   duration: 0.7, 
-                  delay: index * 0.15, // 减少延迟
-                  ease: [0.42, 0, 0.58, 1] // cubic-bezier for easeOut
+                  delay: index * 0.15,
+                  ease: [0.42, 0, 0.58, 1]
                 }}
                 className="bg-voryx-gray bg-opacity-30 border border-white border-opacity-10 p-8 hover:border-voryx-accent hover:border-opacity-30 transition-all duration-300"
-                style={{ willChange: 'transform, opacity' }} // 性能优化
+                style={{ willChange: 'transform, opacity' }}
               >
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Main Content */}
                   <div className="lg:col-span-2">
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-3xl font-bold tracking-wide text-white">{route.title}</h2>
-                      <span className={`px-3 py-1 text-sm font-medium rounded ${
+                      {/* 修复状态标签文字颜色 */}
+                      <span className={`px-3 py-1 text-sm font-semibold rounded ${
                         route.status === 'Active' ? 'bg-green-500 bg-opacity-20 text-green-400' :
-                        route.status === 'Accepting Applications' ? 'bg-voryx-accent bg-opacity-20 text-voryx-accent' :
-                        'bg-orange-500 bg-opacity-20 text-orange-400'
+                        route.status === 'Accepting Applications' ? 'bg-voryx-accent text-black' :
+                        'bg-orange-500 text-black'
                       }`}>
                         {route.status}
                       </span>

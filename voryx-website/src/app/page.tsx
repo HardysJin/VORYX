@@ -113,7 +113,7 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        {/* Corner Navigation Dots (Optional Elegant Touch) */}
+        {/* Corner Navigation Dots */}
         <div className="absolute bottom-8 right-8 hidden lg:flex flex-col space-y-2">
           {[1, 2, 3, 4].map((dot) => (
             <div 
@@ -125,7 +125,7 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-32 px-4 bg-black">
+      <section className="py-16 px-4 bg-black">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -133,16 +133,18 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-20"
           >
-            <h2 className="section-title font-bold mb-8 tracking-wide">
+            <h2 className="section-title font-bold mb-8 tracking-wide text-white">
               Beyond Conventional Travel
             </h2>
-            <div className="w-24 h-1 mx-auto mb-8">
-              <p className="section-subtitle text-gray-400 max-w-4xl mx-auto leading-relaxed pb-4">
-                VORYX expeditions are carefully crafted to challenge perspectives, 
-                contribute to scientific understanding, and create lasting impact.
-              </p>
-            </div>
-
+            
+            {/* Decorative divider line */}
+            <div className="w-24 h-1 bg-voryx-accent mx-auto mb-8"></div>
+            
+            {/* Subtitle text */}
+            <p className="section-subtitle text-gray-400 max-w-4xl mx-auto leading-relaxed py-4">
+              VORYX expeditions are carefully crafted to challenge perspectives, 
+              contribute to scientific understanding, and create lasting impact.
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -170,11 +172,11 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: index * 0.2 }}
                 className="group text-center"
               >
-                <div className="bg-voryx-gray border border-white/10 p-10 hover:border-voryx-accent/50 transition-all duration-500 group-hover:transform group-hover:scale-105 py-3 px-2">
+                <div className="bg-voryx-gray border border-white/10 p-10 hover:border-voryx-accent/50 transition-all duration-500 group-hover:transform group-hover:scale-105">
                   <div className="text-voryx-accent mb-6 flex justify-center group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
-                  <h3 className="feature-title font-bold mb-6 tracking-wide">
+                  <h3 className="feature-title text-white font-bold mb-6 tracking-wide">
                     {feature.title}
                   </h3>
                   <p className="feature-description text-gray-400 leading-relaxed">
@@ -188,14 +190,14 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 px-4 bg-gradient-to-r from-black via-voryx-gray to-black">
+      <section className="py-8 px-4 bg-gradient-to-r from-black via-voryx-gray to-black">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="cta-title font-bold mb-8 tracking-wide">
+            <h2 className="cta-title text-white font-bold mb-8 tracking-wide">
               Become a Co-Author of Our Generation&apos;s Archive
             </h2>
             <div className="w-32 h-1 bg-voryx-accent mx-auto mb-8"></div>
@@ -238,6 +240,7 @@ export default function Home() {
         .hero-title {
           font-size: clamp(3rem, 12vw, 8rem);
           line-height: 0.9;
+          color: white;
         }
 
         .hero-subtitle {
