@@ -62,7 +62,22 @@ const destinations = [
   }
 ];
 
-const ImageContent = ({ destination, isCard = false }) => (
+type Destination = {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  image: string;
+  cardImage: string;
+  bgColor: string;
+};
+
+type ImageContentProps = {
+  destination: Destination;
+  isCard?: boolean;
+};
+
+const ImageContent = ({ destination, isCard = false }: ImageContentProps) => (
   <div className="absolute inset-0">
     {/* 背景渐变 */}
     <div className={`absolute inset-0 bg-gradient-to-br ${destination.bgColor}`} />
@@ -80,8 +95,8 @@ const ImageContent = ({ destination, isCard = false }) => (
           minHeight: '100%'
         }}
         onError={(e) => {
-          console.error('Image failed to load:', e.target.src);
-          e.target.style.display = 'none';
+          console.error('Image failed to load:', (e.target as HTMLImageElement).src);
+          (e.target as HTMLImageElement).style.display = 'none';
         }}
       />
     </div>
@@ -93,12 +108,16 @@ const ImageContent = ({ destination, isCard = false }) => (
 
 export default function Atlas() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [expandingId, setExpandingId] = useState(null);
+  const [expandingId, setExpandingId] = useState<number | null>(null);
 
   const currentDestination = destinations[currentIndex];
   const visibleCards = destinations.slice(currentIndex + 1, currentIndex + 5);
 
-  const handleTransition = (newIndex, cardId) => {
+  interface HandleTransition {
+    (newIndex: number, cardId: number): void;
+  }
+
+  const handleTransition: HandleTransition = (newIndex, cardId) => {
     if (expandingId) return;
     
     setExpandingId(cardId);
@@ -112,7 +131,11 @@ export default function Atlas() {
     }, 900);
   };
 
-  const handleCardClick = (clickedIndex, cardId) => {
+  interface HandleCardClick {
+    (clickedIndex: number, cardId: number): void;
+  }
+
+  const handleCardClick: HandleCardClick = (clickedIndex, cardId) => {
     handleTransition(clickedIndex, cardId);
   };
 
@@ -161,7 +184,7 @@ export default function Atlas() {
               x: '-20vw'
             }}
           >
-            <ImageContent destination={destinations.find(d => d.id === expandingId)} />
+            <ImageContent destination={destinations.find(d => d.id === expandingId) ?? currentDestination} />
           </motion.div>
         )}
       </AnimatePresence>
