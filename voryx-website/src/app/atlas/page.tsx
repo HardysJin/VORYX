@@ -120,12 +120,15 @@ export default function Atlas() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [expandingId, setExpandingId] = useState<number | null>(null);
+  const [shrinkingId, setShrinkingId] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [targetCardPosition, setTargetCardPosition] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [hiddenCardId, setHiddenCardId] = useState<number | null>(null);
   
   const bgTimerRef = useRef<NodeJS.Timeout | null>(null);
   const transitionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  // 响应式断点
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
   const isDesktop = useMediaQuery('(min-width: 1025px)');
@@ -141,7 +144,6 @@ export default function Atlas() {
   }, []);
   
   const getVisibleCards = () => {
-    // 根据屏幕大小决定显示的卡片数量
     const cardCount = isMobile ? 2 : isTablet ? 3 : 3;
     const cards = [];
     for (let i = 1; i <= cardCount; i++) {
@@ -156,25 +158,71 @@ export default function Atlas() {
 
   const visibleCards = getVisibleCards();
 
-  const handleTransition = (newIndex: number, cardId: number) => {
-    // 如果正在过渡中，忽略点击
+  const handleTransitionZoomOut = (newIndex: number, cardId: number) => {
     if (isTransitioning) return;
     
-    // 清除之前的定时器
     if (bgTimerRef.current) clearTimeout(bgTimerRef.current);
     if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
     
-    // 设置过渡状态
     setIsTransitioning(true);
     setExpandingId(cardId);
+    setShrinkingId(null);
     setCurrentIndex(newIndex);
     
-    // zoom out 动画完成后立即更新背景
     bgTimerRef.current = setTimeout(() => {
       setBackgroundIndex(newIndex);
       setExpandingId(null);
       
-      // 背景更新后再等待一小段时间让背景切换完成，然后解锁
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
+    }, 850);
+  };
+
+  const handleTransitionZoomIn = (newIndex: number) => {
+    if (isTransitioning) return;
+    
+    if (bgTimerRef.current) clearTimeout(bgTimerRef.current);
+    if (transitionTimerRef.current) clearTimeout(transitionTimerRef.current);
+    
+    // 获取当前第一张可见卡片的位置（在状态更新前）
+    const firstCardIndex = (currentIndex + 1) % destinations.length;
+    const firstCardId = destinations[firstCardIndex].id;
+    const targetCard = cardRefs.current.get(firstCardId);
+    
+    if (!targetCard) {
+      console.warn('Target card not found, falling back to zoom out');
+      handleTransitionZoomOut(newIndex, destinations[newIndex].id);
+      return;
+    }
+    
+    const rect = targetCard.getBoundingClientRect();
+    setTargetCardPosition({
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height
+    });
+    
+    setIsTransitioning(true);
+    setShrinkingId(backgroundDestination.id);
+    setExpandingId(null);
+    
+    // 立即更新currentIndex和backgroundIndex
+    setCurrentIndex(newIndex);
+    setBackgroundIndex(newIndex); // 立即切换背景
+    
+    // 隐藏新的第一张预览卡片（点击后出现的第一张）
+    const newFirstCardIndex = (newIndex + 1) % destinations.length;
+    const newFirstCardId = destinations[newFirstCardIndex].id;
+    setHiddenCardId(newFirstCardId);
+    
+    // zoom in 动画完成后清除动画层并显示卡片
+    bgTimerRef.current = setTimeout(() => {
+      setShrinkingId(null);
+      setTargetCardPosition(null);
+      setHiddenCardId(null); // 显示卡片
+      
       setTimeout(() => {
         setIsTransitioning(false);
       }, 300);
@@ -182,23 +230,22 @@ export default function Atlas() {
   };
 
   const handleCardClick = (clickedIndex: number, cardId: number) => {
-    handleTransition(clickedIndex, cardId);
+    handleTransitionZoomOut(clickedIndex, cardId);
   };
 
   const handleNext = () => {
     const nextIndex = (currentIndex + 1) % destinations.length;
-    handleTransition(nextIndex, destinations[nextIndex].id);
+    handleTransitionZoomOut(nextIndex, destinations[nextIndex].id);
   };
 
   const handlePrev = () => {
     const prevIndex = (currentIndex - 1 + destinations.length) % destinations.length;
-    handleTransition(prevIndex, destinations[prevIndex].id);
+    handleTransitionZoomIn(prevIndex);
   };
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-black">
       <style jsx>{`
-        /* Centered Container for alignment with header */
         .atlas-centered-container {
           position: relative;
           max-width: 1920px;
@@ -207,7 +254,6 @@ export default function Atlas() {
           padding: 0 clamp(1rem, 5vw, 4rem);
         }
 
-        /* Navigation Buttons - Responsive */
         .atlas-nav-btn {
           width: clamp(36px, 5vw, 48px);
           height: clamp(36px, 5vw, 48px);
@@ -237,13 +283,7 @@ export default function Atlas() {
           opacity: 0.4;
           cursor: not-allowed;
         }
-        
-        .card-disabled {
-          pointer-events: none;
-          opacity: 0.6;
-        }
 
-        /* Responsive Typography */
         .atlas-title {
           font-size: clamp(1.75rem, 7vw, 5rem);
           line-height: 1;
@@ -265,15 +305,6 @@ export default function Atlas() {
           font-size: clamp(0.8rem, 1.3vw, 1rem);
         }
 
-        .atlas-card-title {
-          font-size: clamp(0.7rem, 1.1vw, 1rem);
-        }
-
-        .atlas-card-subtitle {
-          font-size: clamp(0.6rem, 0.9vw, 0.75rem);
-        }
-
-        /* Card Sizing - 使用固定尺寸确保显示 */
         .atlas-card {
           width: 192px !important;
           height: 256px !important;
@@ -282,7 +313,6 @@ export default function Atlas() {
           flex-shrink: 0 !important;
         }
         
-        /* 移动端固定尺寸 */
         @media (max-width: 768px) {
           .atlas-card {
             width: 140px !important;
@@ -290,7 +320,6 @@ export default function Atlas() {
           }
         }
         
-        /* 平板固定尺寸 */
         @media (min-width: 769px) and (max-width: 1024px) {
           .atlas-card {
             width: 160px !important;
@@ -298,11 +327,6 @@ export default function Atlas() {
           }
         }
 
-        .atlas-card-gap {
-          gap: clamp(0.5rem, 1.5vw, 1rem);
-        }
-
-        /* Mobile Portrait - 完全重新布局 */
         @media (max-width: 768px) {
           .atlas-centered-container {
             padding: 0;
@@ -334,23 +358,6 @@ export default function Atlas() {
             z-index: 20;
           }
 
-          .atlas-cards-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            position: relative;
-            z-index: 20;
-          }
-
-          .atlas-card {
-            width: clamp(100px, 28vw, 140px) !important;
-            height: clamp(140px, 38vw, 190px) !important;
-            position: relative;
-            z-index: 20;
-          }
-
           .atlas-title {
             font-size: clamp(1.5rem, 8vw, 2.5rem) !important;
           }
@@ -367,14 +374,9 @@ export default function Atlas() {
           }
         }
 
-        /* Tablet Portrait */
         @media (min-width: 769px) and (max-width: 1024px) {
           .atlas-centered-container {
             padding: 0 2rem;
-          }
-
-          .atlas-content-wrapper {
-            flex-direction: row !important;
           }
 
           .atlas-left-content {
@@ -402,29 +404,11 @@ export default function Atlas() {
             padding-left: 0 !important;
             z-index: 20;
           }
-
-          .atlas-cards-container {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            position: relative;
-            z-index: 20;
-          }
-
-          .atlas-card {
-            width: clamp(130px, 18vw, 160px) !important;
-            height: clamp(180px, 24vw, 220px) !important;
-          }
         }
 
-        /* Desktop */
         @media (min-width: 1025px) {
           .atlas-centered-container {
             padding: 0 clamp(2rem, 5vw, 4rem);
-          }
-
-          .atlas-content-wrapper {
-            flex-direction: row;
           }
 
           .atlas-left-content {
@@ -452,48 +436,16 @@ export default function Atlas() {
             padding: 0;
             z-index: 20;
           }
-
-          .atlas-cards-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            position: relative;
-            z-index: 20;
-            min-width: 550px;
-          }
         }
 
-        /* Large Desktop */
-        @media (min-width: 1920px) {
-          .atlas-centered-container {
-            padding: 0 4rem;
-          }
-
-          .atlas-title {
-            font-size: 5.5rem;
-          }
-
-          .atlas-description {
-            font-size: 1.25rem;
-          }
-
-          .atlas-card {
-            width: 220px;
-            height: 280px;
-          }
-        }
-
-        /* Color Definitions */
         .text-voryx-accent { color: #d4af37; }
         .bg-voryx-accent { background-color: #d4af37; }
         .hover\\:bg-voryx-accent:hover { background-color: #d4af37; }
         
-        /* Text Shadow for Better Readability */
         .text-shadow-lg {
           text-shadow: 0 4px 8px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
-        /* Smooth Scrolling */
         .atlas-left-content {
           scrollbar-width: thin;
           scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
@@ -525,7 +477,7 @@ export default function Atlas() {
         </motion.div>
       </div>
 
-      {/* Expanding card overlay */}
+      {/* Zoom Out - Expanding card overlay */}
       <AnimatePresence mode="wait">
         {expandingId && (
           <motion.div
@@ -536,16 +488,53 @@ export default function Atlas() {
             exit={{ opacity: 0 }}
             className="absolute z-[5]"
             transition={{ 
-              layout: { duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] },
-              x: { duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] },
+              layout: { type: "spring", stiffness: 320, damping: 60, mass: 1 },
+              x: { type: "spring", stiffness: 320, damping: 60, mass: 1 },
               opacity: { duration: 0.3 }
             }}
             style={{
               inset: 0,
-              x: '-20vw'
+              x: '-20vw',
+              boxShadow: '0 50px 100px -20px rgba(0, 0, 0, 0.7), 0 30px 50px -15px rgba(0, 0, 0, 0.6)'
             }}
           >
             <ImageContent destination={destinations.find(d => d.id === expandingId) ?? currentDestination} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Zoom In - Shrinking background overlay */}
+      <AnimatePresence mode="wait">
+        {shrinkingId && targetCardPosition && (
+          <motion.div
+            key={`shrinking-${shrinkingId}`}
+            initial={{ 
+              position: 'absolute',
+              inset: 0,
+              zIndex: 50
+            }}
+            animate={{
+              left: targetCardPosition.x,
+              top: targetCardPosition.y,
+              width: targetCardPosition.width,
+              height: targetCardPosition.height,
+              borderRadius: '16px'
+            }}
+            exit={{ opacity: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 280, 
+              damping: 50, 
+              mass: 1.2,
+              opacity: { duration: 0.2, delay: 0.6 }
+            }}
+            style={{
+              position: 'absolute',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              overflow: 'hidden'
+            }}
+          >
+            <ImageContent destination={destinations.find(d => d.id === shrinkingId) ?? backgroundDestination} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -570,7 +559,6 @@ export default function Atlas() {
           }
         }
       >
-        {/* Container for alignment with header */}
         <div 
           className="atlas-centered-container"
           style={
@@ -711,14 +699,22 @@ export default function Atlas() {
                   <AnimatePresence mode="popLayout">
                     {visibleCards.map((dest, idx) => {
                       const isExpanding = expandingId === dest.id;
+                      const isHidden = hiddenCardId === dest.id;
                       
                       return (
                         <motion.div
                           key={dest.id}
                           layoutId={`shared-${dest.id}`}
+                          ref={(el: HTMLDivElement | null) => {
+                            if (el) {
+                              cardRefs.current.set(dest.id, el);
+                            } else {
+                              cardRefs.current.delete(dest.id);
+                            }
+                          }}
                           initial={{ opacity: 0, scale: 0.8, x: 100 }}
                           animate={{ 
-                            opacity: isExpanding ? 0 : 1, 
+                            opacity: (isExpanding || isHidden) ? 0 : 1, 
                             scale: 1, 
                             x: 0 
                           }}
@@ -726,7 +722,7 @@ export default function Atlas() {
                           transition={{ 
                             duration: 0.5, 
                             delay: idx * 0.1,
-                            opacity: { duration: 0.2 }
+                            opacity: { duration: isHidden ? 0 : 0.2 }
                           }}
                           onClick={() => !isTransitioning && handleCardClick(dest.originalIndex, dest.id)}
                           style={{ 
