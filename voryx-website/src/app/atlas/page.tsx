@@ -118,12 +118,17 @@ const ImageContent = ({ destination, isCard = false }: ImageContentProps) => (
 
 export default function Atlas() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [displayIndex, setDisplayIndex] = useState(0); // 控制卡片显示的索引
+  const [displayIndex, setDisplayIndex] = useState(0);
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const [expandingId, setExpandingId] = useState<number | null>(null);
-  const [shrinkingId, setShrinkingId] = useState<number | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [targetCardPosition, setTargetCardPosition] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // 维护预览卡片的顺序队列
+  const [cardOrder, setCardOrder] = useState<number[]>(() => {
+    // 初始化：除了第一张(索引0)外的所有卡片
+    return destinations.slice(1).map((_, idx) => idx + 1);
+  });
   
   const bgTimerRef = useRef<NodeJS.Timeout | null>(null);
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -141,16 +146,11 @@ export default function Atlas() {
   }, []);
   
   const getVisibleCards = () => {
-    const cardCount = isMobile ? 2 : 3;
-    const cards = [];
-    for (let i = 1; i <= cardCount; i++) {
-      const index = (displayIndex + i) % destinations.length; // 使用 displayIndex
-      cards.push({
-        ...destinations[index],
-        originalIndex: index
-      });
-    }
-    return cards;
+    // 使用维护的卡片顺序队列
+    return cardOrder.map(index => ({
+      ...destinations[index],
+      originalIndex: index
+    }));
   };
 
   const visibleCards = getVisibleCards();
@@ -160,20 +160,21 @@ export default function Atlas() {
     
     if (bgTimerRef.current) clearTimeout(bgTimerRef.current);
     
-    // 1. 锁定交互，标记扩展卡片
     setIsTransitioning(true);
     setExpandingId(cardId);
-    setShrinkingId(null);
     
-    // 2. 立即更新主内容索引
     setCurrentIndex(newIndex);
     
-    // 3. 在扩展动画完成后，同时更新背景和卡片显示（此时扩展层还在全屏遮挡）
     bgTimerRef.current = setTimeout(() => {
       setBackgroundIndex(newIndex);
       setDisplayIndex(newIndex);
       
-      // 4. 等待一帧让背景和卡片渲染，然后移除扩展层
+      // 更新卡片顺序：移除新背景，添加旧背景到末尾
+      setCardOrder(prevOrder => {
+        const newOrder = prevOrder.filter(idx => idx !== newIndex);
+        return [...newOrder, backgroundIndex];
+      });
+      
       setTimeout(() => {
         setExpandingId(null);
         
@@ -184,65 +185,58 @@ export default function Atlas() {
     }, 800);
   };
 
-  const handleTransitionZoomIn = (newIndex: number) => {
-    if (isTransitioning) return;
-    
-    if (bgTimerRef.current) clearTimeout(bgTimerRef.current);
-    
-    // 1. 获取当前第一张卡片的位置（基于 displayIndex）
-    const firstCardIndex = (displayIndex + 1) % destinations.length;
-    const firstCardId = destinations[firstCardIndex].id;
-    const targetCard = cardRefs.current.get(firstCardId);
-    
-    if (!targetCard) {
-      console.warn('Target card not found, falling back to zoom out');
-      handleTransitionZoomOut(newIndex, destinations[newIndex].id);
-      return;
-    }
-    
-    const rect = targetCard.getBoundingClientRect();
-    setTargetCardPosition({
-      x: rect.left,
-      y: rect.top,
-      width: rect.width,
-      height: rect.height
-    });
-    
-    // 2. 锁定交互，开始缩小动画
-    setIsTransitioning(true);
-    setShrinkingId(backgroundDestination.id);
-    setExpandingId(null);
-    
-    // 3. 延迟更新所有索引，让缩小动画先进行
-    setTimeout(() => {
-      setCurrentIndex(newIndex);
-      setDisplayIndex(newIndex);
-      setBackgroundIndex(newIndex);
-    }, 100);
-    
-    // 4. 等待缩小动画完成
-    bgTimerRef.current = setTimeout(() => {
-      setShrinkingId(null);
-      setTargetCardPosition(null);
-      
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 200);
-    }, 850);
-  };
-
   const handleCardClick = (clickedIndex: number, cardId: number) => {
     handleTransitionZoomOut(clickedIndex, cardId);
   };
 
   const handleNext = () => {
-    const nextIndex = (displayIndex + 1) % destinations.length;
+    if (isDragging || cardOrder.length === 0 || isTransitioning) return;
+    // 选择队列中的第一张卡片，触发zoom out效果
+    const nextIndex = cardOrder[0];
     handleTransitionZoomOut(nextIndex, destinations[nextIndex].id);
   };
 
   const handlePrev = () => {
-    const prevIndex = (displayIndex - 1 + destinations.length) % destinations.length;
-    handleTransitionZoomIn(prevIndex);
+    if (isDragging || cardOrder.length === 0 || isTransitioning) return;
+    // 只循环卡片，不改变背景：将最后一张卡片移到最前面
+    setCardOrder(prevOrder => {
+      const lastCard = prevOrder[prevOrder.length - 1];
+      const newOrder = [lastCard, ...prevOrder.slice(0, -1)];
+      return newOrder;
+    });
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+  };
+
+  interface DragInfo {
+    offset: { x: number; y: number };
+    velocity: { x: number; y: number };
+  }
+
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: DragInfo
+  ) => {
+    const swipeThreshold = 50;
+    const swipeVelocity = 500;
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+    
+    if (Math.abs(offset) > swipeThreshold || Math.abs(velocity) > swipeVelocity) {
+      if (offset > 0 || velocity > 0) {
+        // 向右滑动 - 循环到上一张
+        handlePrev();
+      } else {
+        // 向左滑动 - 选择第一张并zoom out
+        handleNext();
+      }
+    }
+    
+    setTimeout(() => {
+      setIsDragging(false);
+    }, 100);
   };
 
   return (
@@ -485,43 +479,6 @@ export default function Atlas() {
         )}
       </AnimatePresence>
 
-      {/* Zoom In - Shrinking background overlay */}
-      <AnimatePresence mode="wait">
-        {shrinkingId && targetCardPosition && (
-          <motion.div
-            key={`shrinking-${shrinkingId}`}
-            initial={{ 
-              position: 'absolute',
-              inset: 0,
-              zIndex: 50,
-              borderRadius: '0px'
-            }}
-            animate={{
-              left: targetCardPosition.x,
-              top: targetCardPosition.y,
-              width: targetCardPosition.width,
-              height: targetCardPosition.height,
-              borderRadius: '16px'
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 280, 
-              damping: 50, 
-              mass: 1.2,
-              opacity: { duration: 0.2, delay: 0.6 }
-            }}
-            style={{
-              position: 'absolute',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-              overflow: 'hidden'
-            }}
-          >
-            <ImageContent destination={destinations.find(d => d.id === shrinkingId) ?? backgroundDestination} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Main Content */}
       <div 
         className="atlas-content-wrapper" 
@@ -643,7 +600,9 @@ export default function Atlas() {
                   alignItems: 'center',
                   gap: '1rem',
                   position: 'relative',
-                  zIndex: 40
+                  zIndex: 40,
+                  maxWidth: '100%',
+                  overflowX: 'visible'
                 }}
               >
                 {/* Left Navigation Button */}
@@ -662,13 +621,28 @@ export default function Atlas() {
                 </button>
 
                 {/* Cards Container */}
-                <div 
+                <motion.div 
+                  drag="x"
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={0.3}
+                  dragTransition={{ 
+                    bounceStiffness: 300, 
+                    bounceDamping: 30,
+                    power: 0.3,
+                    timeConstant: 200
+                  }}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
                   style={{ 
                     display: 'flex',
-                    gap: '1rem',
+                    gap: isMobile ? '0.75rem' : '1rem',
                     position: 'relative',
-                    zIndex: 40
+                    zIndex: 40,
+                    cursor: isTransitioning ? 'not-allowed' : 'grab',
+                    maxWidth: isMobile ? '100%' : 'none',
+                    overflowX: 'visible'
                   }}
+                  whileTap={{ cursor: 'grabbing' }}
                 >
                   <AnimatePresence mode="popLayout" initial={false}>
                     {visibleCards.map((dest, idx) => {
@@ -694,23 +668,24 @@ export default function Atlas() {
                           exit={{ opacity: 0, scale: 0.8, x: -50 }}
                           transition={{ 
                             duration: 0.5, 
-                            delay: idx * 0.1,
+                            delay: idx * 0.05,
                             opacity: { duration: 0.2 }
                           }}
-                          onClick={() => !isTransitioning && handleCardClick(dest.originalIndex, dest.id)}
+                          onClick={() => !isTransitioning && !isDragging && handleCardClick(dest.originalIndex, dest.id)}
                           style={{ 
                             position: 'relative',
-                            width: isMobile ? '140px' : '192px',
-                            height: isMobile ? '190px' : '256px',
-                            borderRadius: '16px',
+                            width: isMobile ? '120px' : '160px',
+                            height: isMobile ? '160px' : '220px',
+                            borderRadius: '12px',
                             overflow: 'hidden',
-                            cursor: isTransitioning ? 'not-allowed' : 'pointer',
+                            cursor: isTransitioning || isDragging ? 'grabbing' : 'pointer',
                             backgroundColor: '#1a1a1a',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                            boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.3)',
                             flexShrink: 0,
-                            zIndex: 40
+                            zIndex: 40,
+                            pointerEvents: isDragging ? 'none' : 'auto'
                           }}
-                          whileHover={!isExpanding && !isTransitioning ? { scale: 1.05, y: -10 } : {}}
+                          whileHover={!isExpanding && !isTransitioning && !isDragging ? { scale: 1.05, y: -8 } : {}}
                         >
                           <ImageContent destination={dest} isCard={true} />
                           <div 
@@ -719,22 +694,22 @@ export default function Atlas() {
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              padding: '12px',
+                              padding: isMobile ? '8px' : '10px',
                               color: 'white',
                               zIndex: 45
                             }}
                           >
                             <p style={{ 
-                              fontSize: '0.75rem',
-                              marginBottom: '4px',
+                              fontSize: isMobile ? '0.65rem' : '0.7rem',
+                              marginBottom: '2px',
                               opacity: 0.8
                             }}>
                               {dest.subtitle}
                             </p>
                             <h3 style={{ 
-                              fontSize: '1rem',
+                              fontSize: isMobile ? '0.85rem' : '0.9rem',
                               fontWeight: 'bold',
-                              lineHeight: 1.25
+                              lineHeight: 1.2
                             }}>
                               {dest.title}
                             </h3>
@@ -743,7 +718,7 @@ export default function Atlas() {
                       );
                     })}
                   </AnimatePresence>
-                </div>
+                </motion.div>
 
                 {/* Right Navigation Button */}
                 <button 
